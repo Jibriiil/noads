@@ -25,3 +25,4 @@
 !/.coveragerc
 
 /.pytest_cache
+venv/
