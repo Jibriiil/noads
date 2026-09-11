@@ -187,6 +187,7 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
     biomass = Energy("BIOMASS")
     electricity = Energy("ELECTRICITY")
     # natural_gas = Energy("NATURAL_GAS")
+    geologic_h2= Energy("GEOLOGIC_H2")
 
     # Production Pathways and their associated Secondary energies ......................
 
@@ -232,9 +233,15 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
         impacts=[co2],
         input_streams=[],
     )
+    # Geologic hydrogen production (extraction + processing)
+    geological_extraction= ProductionPathway(
+        "Geological_extraction",
+        impacts=[co2],
+        input_streams=[geologic_h2],
+    )
     gh2 = ProducedEnergy(
         "GAS-H2",
-        pathways=[electrolysis, gas],
+        pathways=[electrolysis, gas, geological_extraction],
     )
     # E-fuel
     ptl = ProductionPathway(
@@ -351,7 +358,7 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
         #         }
         #     )
 
-    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass])
+    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass, geologic_h2])
 
     # Aircraft technology evolution parameters
     aircraft_tech_params = []

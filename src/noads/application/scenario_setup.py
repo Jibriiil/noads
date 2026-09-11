@@ -51,6 +51,8 @@ def single_scenario_setup(
     technology_index=0,
     integrate_constraints=False,
     demand_aversion=False,
+    include_geologic_h2=False,
+    geologic_h2_fair_share=None,
     drop_in_only=False,
     fossil_kerosene_only=False,
     preferential_energy=False,
@@ -81,6 +83,7 @@ def single_scenario_setup(
             instead of imposing path-wise constraints.
         demand_aversion: Whether to use the low-demand formulation (supply caps and
             discounted price-increase burden).
+        include_geologic_h2: Whether to include geological hydrogen as a primary energy source.
         drop_in_only: Whether to restrict the fleet to drop-in (Jet-A) aircraft.
         fossil_kerosene_only: Whether to restrict Jet-A to fossil kerosene.
         preferential_energy: Whether to use the preferential (8.6 %) instead of the
@@ -93,6 +96,7 @@ def single_scenario_setup(
         constraint name to its bound and sign), the energy mix, and the fleet.
     """
     resources_fair_share = 8.6e-2 if preferential_energy else 5.0e-2
+    geologic_h2_fair_share = {"optimistic": 0.8, "moderate": 0.5, "pessimistic": 0.2}
     ar6_data, years_data = get_ar6_input_data(plot_data=plot_scenario_data)
     energy_mix, fleet = initialize_base_objects(drop_in_only, technology_index)
 
@@ -188,6 +192,16 @@ def single_scenario_setup(
         "Power_to_liquid.ELECTRICITY.efficiency": (1.53, 1.53 * 1.08, 1.53 * 1.16),
         "Power_to_liquid.GAS-H2.efficiency": (0.53, 0.53 * 1.06, 0.53 * 1.12),
     }
+    if include_geologic_h2:
+        constants.update({      
+            "GEOLOGIC_H2.CO2_index": 0.0,
+            # From LCA geological hydrogen https://doi.org/10.1016/j.joule.2023.07.001
+            "Geological_extraction.direct.CO2_index": 3.0,
+            "Geological_extraction.GEOLOGIC_H2.efficiency": 0.92,
+            "GEOLOGIC_H2.fair_share": geologic_h2_fair_share if geologic_h2_fair_share is not None else geologic_h2_fair_share["moderate"],
+           
+        })
+        
     if not drop_in_only:
         constants.update({
             "H2_liquefaction.direct.CO2_index": 0.0,
