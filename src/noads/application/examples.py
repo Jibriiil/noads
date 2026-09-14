@@ -49,6 +49,8 @@ def single_policy_scenario_optimization(
     global_scenario_name: str,
     carbon_budget_percent=3.0,
     technology_index=0,
+    include_geologic_h2=False,
+    geologic_h2_availability="moderate",
     drop_in_only=False,
     fossil_kerosene_only=False,
     low_demand_formulation=False,
@@ -132,6 +134,8 @@ def single_policy_scenario_optimization(
                         drop_in_only=drop_in_only,
                         fossil_kerosene_only=fossil_kerosene_only,
                         preferential_energy=preferential_energy,
+                        include_geologic_h2=include_geologic_h2,
+                        geologic_h2_availability=geologic_h2_availability,
                     )
                     plot_single_scenario_result(
                         scenario_name=scenario_name,
@@ -166,6 +170,8 @@ def single_policy_scenario_optimization(
             drop_in_only=drop_in_only,
             fossil_kerosene_only=fossil_kerosene_only,
             preferential_energy=preferential_energy,
+            include_geologic_h2=include_geologic_h2,
+            geologic_h2_availability=geologic_h2_availability
         )
     )
 

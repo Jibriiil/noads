@@ -158,7 +158,7 @@ tech_params_lower_mid_upper_2020_2040_2060 = {
 }
 
 
-def initialize_base_objects(drop_in_only=False, technology_index=0):
+def initialize_base_objects(drop_in_only=False, technology_index=0, include_geologic_h2=False):
     """Build the energy mix and global fleet of the paper's scenarios.
 
     Args:
@@ -168,7 +168,7 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
         technology_index: The aircraft technology scenario (0: Lower, 1: Mid,
             2: Upper), selecting the component technology parameters, the
             current-fleet consumption quartile, and the fleet lifetimes.
-
+        include_geologic_h2: Whether to include geological hydrogen as a primary energy source.
     Returns:
         The energy mix and the fleet assembly.
 
@@ -241,7 +241,8 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
     )
     gh2 = ProducedEnergy(
         "GAS-H2",
-        pathways=[electrolysis, gas, geological_extraction],
+        pathways=[electrolysis, gas, geological_extraction]
+        if include_geologic_h2 else [electrolysis, gas],
     )
     # E-fuel
     ptl = ProductionPathway(
@@ -358,7 +359,8 @@ def initialize_base_objects(drop_in_only=False, technology_index=0):
         #         }
         #     )
 
-    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass, geologic_h2])
+    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass, geologic_h2]
+                           if include_geologic_h2 else [electricity, biomass],)
 
     # Aircraft technology evolution parameters
     aircraft_tech_params = []
