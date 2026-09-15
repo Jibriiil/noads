@@ -241,7 +241,7 @@ def initialize_base_objects(drop_in_only=False, technology_index=0, include_geol
     )
     gh2 = ProducedEnergy(
         "GAS-H2",
-        pathways=[electrolysis, gas, geological_extraction]
+        pathways=[electrolysis, geological_extraction, gas]
         if include_geologic_h2 else [electrolysis, gas],
     )
     # E-fuel

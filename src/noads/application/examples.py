@@ -84,6 +84,9 @@ def single_policy_scenario_optimization(
     """
     # Build scenario name with suffixes
     scenario_name = global_scenario_name
+    if include_geologic_h2 and geologic_h2_availability in ["optimistic", "moderate", "pessimistic"]:
+        scenario_name += f"-GeoH2-{geologic_h2_availability[:3]}"
+
     if fossil_kerosene_only:
         scenario_name += "-Fossil"
     elif drop_in_only:
@@ -91,6 +94,7 @@ def single_policy_scenario_optimization(
 
     if low_demand_formulation:
         scenario_name += "-LowDemand"
+
     if preferential_energy:
         scenario_name += "-Availability"
 
@@ -120,8 +124,8 @@ def single_policy_scenario_optimization(
 
                 # Optionally plot loaded results
                 if plot_optimum:
-                    start_year = 2025.0
-                    end_year = 2075.0
+                    start_year = 2030.0
+                    end_year = 2080.0
                     _, _, _, energy_mix, fleet = single_scenario_setup(
                         name=scenario_name,
                         background_scenario_name=global_scenario_name,
@@ -155,8 +159,8 @@ def single_policy_scenario_optimization(
             )
 
     # Standard optimization execution (existing code)
-    start_year = 2025.0
-    end_year = 2075.0
+    start_year = 2030.0
+    end_year = 2080.0
     aeromax_scenario, design_space, constraints, energy_mix, fleet = (
         single_scenario_setup(
             name=scenario_name,

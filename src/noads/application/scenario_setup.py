@@ -45,8 +45,8 @@ refuel_eu_efuel = [0.01, 0.02, 0.05, 0.10, 0.15, 0.35, 0.7, 1.0]
 def single_scenario_setup(
     name: str,
     background_scenario_name: str,
-    start_year=2025,
-    end_year=2075,
+    start_year=2030,
+    end_year=2080,
     time_step=1.0,
     interp_step=2.5,
     technology_index=0,
