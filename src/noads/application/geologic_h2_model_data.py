@@ -8,9 +8,10 @@ from scipy.optimize import curve_fit
 # Conversions
 H2_LHV_MJ_PER_KG = 120.0
 KG_PER_MT = 1e9
-J_PER_MJ = 1e6
+# J_PER_MJ = 1e6
 
 def get_geologic_h2_resources(noads_start_year=2030, end_year=2080, production_start_year=2030, md0=1.0):
+    """Get geological H2 production (MJ/year) from shale-gas-analogue model."""
     production_years = np.arange(production_start_year, end_year + 1)
     md_mt_per_year = build_hydrogen_demand_shale_gas_only(
         production_years, min_range=0.8, max_range=1.2, md0=md0
@@ -20,7 +21,7 @@ def get_geologic_h2_resources(noads_start_year=2030, end_year=2080, production_s
     # epsilon_mt = 1e-9  # négligeable physiquement 
     # values_mt_per_year= np.concatenate([np.full_like(pre_years, epsilon_mt, dtype=float), md_mt_per_year])
 
-    production_j_per_year = md_mt_per_year * KG_PER_MT * H2_LHV_MJ_PER_KG * J_PER_MJ
+    production_j_per_year = md_mt_per_year * KG_PER_MT * H2_LHV_MJ_PER_KG
     return production_years, production_j_per_year
 
 def build_hydrogen_demand_shale_gas_only(years, min_range=0.8, max_range=1.2, md0=1.0):

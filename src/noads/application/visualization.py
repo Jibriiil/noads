@@ -1753,3 +1753,5 @@ def plot_multiple_multi_scenario_result(
         fig.savefig(f"{directory_path}/multi_ensemble_fleet_carriers.pdf")
     else:
         fig.show()
+
+

@@ -261,6 +261,8 @@ def single_policy_robust_scenario_optimization(
     global_scenario_names,
     carbon_budget_percent=3.0,
     technology_index=0,
+    include_geologic_h2=False,
+    geologic_h2_availability="moderate",
     drop_in_only=False,
     fossil_kerosene_only=False,
     low_demand_formulation=False,
@@ -272,6 +274,9 @@ def single_policy_robust_scenario_optimization(
     save_figs=False,
 ):
     """Optimal decarbonization scenario robust to several background scenarios."""
+    if include_geologic_h2 and geologic_h2_availability in ["optimistic", "moderate", "pessimistic"]:
+        scenario_name += f"-GeoH2-{geologic_h2_availability[:3]}"
+
     if fossil_kerosene_only:
         scenario_name += "-Fossil"
     elif drop_in_only:
@@ -308,8 +313,8 @@ def single_policy_robust_scenario_optimization(
 
                 # Optionally plot loaded results
                 if plot_optimum:
-                    start_year = 2025.0
-                    end_year = 2075.0
+                    start_year = 2030.0
+                    end_year = 2080.0
                     _, _, _, energy_mix, fleet = multi_scenario_setup(
                         scenario_name,
                         background_scenario_names=global_scenario_names,
@@ -329,7 +334,7 @@ def single_policy_robust_scenario_optimization(
                         output_optimal={**input_optimal, **output_optimal},
                         energy_mix=energy_mix,
                         fleet=fleet,
-                        year_endplots=2075.0,
+                        year_endplots=2080.0,
                         low_demand=low_demand_formulation,
                         save_figs=save_figs,
                         directory_path=str(results_folder / scenario_name),
@@ -342,8 +347,8 @@ def single_policy_robust_scenario_optimization(
                 result_path,
             )
 
-    start_year = 2025.0
-    end_year = 2075.0
+    start_year = 2030.0
+    end_year = 2080.0
     aeromax_scenario, design_space, constraints, energy_mix, fleet = (
         multi_scenario_setup(
             scenario_name,
@@ -355,6 +360,8 @@ def single_policy_robust_scenario_optimization(
             integrate_constraints=False,
             aggregate_constraints=False,
             demand_aversion=low_demand_formulation,
+            include_geologic_h2=False,
+            geologic_h2_availability="moderate",
             fossil_kerosene_only=fossil_kerosene_only,
             drop_in_only=drop_in_only,
             preferential_energy=preferential_energy,
@@ -432,7 +439,7 @@ def single_policy_robust_scenario_optimization(
             output_optimal={**input_optimal, **output_optimal},
             energy_mix=energy_mix,
             fleet=fleet,
-            year_endplots=2075.0,
+            year_endplots=2080.0,
             low_demand=low_demand_formulation,
             save_figs=save_figs,
             directory_path=str(results_folder / scenario_name),
