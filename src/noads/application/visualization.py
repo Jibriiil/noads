@@ -1071,9 +1071,9 @@ def plot_tech_scenarios_trends(
             )
 
     tech_legend = [
-        Line2D([0], [0], color="k", ls="-", lw=2, label="Lower technology"),
-        Line2D([0], [0], color="k", ls=":", lw=2, label="Mid technology"),
-        Patch(facecolor="k", alpha=0.3, label="Upper to lower tech"),
+        Line2D([0], [0], color="k", ls="-", lw=2, label="Lower Tech"),
+        Line2D([0], [0], color="k", ls=":", lw=2, label="Mid Tech"),
+        Patch(facecolor="k", alpha=0.3, label="Upper to lower Tech"),
     ]
     axes["energy"].legend(loc="lower left", framealpha=0.5)
     axes["carbon"].legend(handles=tech_legend, loc="lower left", framealpha=0.5)
@@ -1120,7 +1120,7 @@ def plot_tech_scenario_jet_fuel(
                     label=label,
                 )
 
-        axes["kerosene"].legend(loc="lower left", framealpha=0.5)
+        axes["biofuel"].legend(loc="upper left", framealpha=0.5)
         # Add fill_between for lower to upper technology range
         if len(output_list) >= 3:
             lower_output = output_list[0]
