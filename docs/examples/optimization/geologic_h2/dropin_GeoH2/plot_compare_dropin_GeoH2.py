@@ -34,15 +34,15 @@ def load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic
     ]
 
 scenario_tech_outputs = {
-    "Drop-in avail": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, preferential_energy=True),
+    "Drop-in low-demand": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, preferential_energy=False, low_demand_formulation=True),
     # "Drop-in low-demand - No GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, low_demand_formulation=True),
-    "Drop-in avail - Low GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="pessimistic", preferential_energy=True),
-    "Drop-in avail - Mod GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="moderate", preferential_energy=True),
-    "Drop-in avail - Opt GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="optimistic", preferential_energy=True),
+    "Drop-in low-demand - Low GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="pessimistic", preferential_energy=False, low_demand_formulation=True),
+    "Drop-in low-demand - Mod GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="moderate",  preferential_energy=False, low_demand_formulation=True),
+    "Drop-in low-demand - Opt GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="optimistic", preferential_energy=False, low_demand_formulation=True),
 }
 
 colors = ["#d62728", "#ff7f0e","#1f77b4", "#50df50"]
 #,"#bc87ea"
-plot_tech_scenarios_trends(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
+# plot_tech_scenarios_trends(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
 # plot_tech_scenario_jet_fuel(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
-# plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
+plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))

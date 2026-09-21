@@ -1120,7 +1120,7 @@ def plot_tech_scenario_jet_fuel(
                     label=label,
                 )
 
-        axes["biofuel"].legend(loc="upper left", framealpha=0.5)
+        axes["kerosene"].legend(loc="upper right", framealpha=0.5)
         # Add fill_between for lower to upper technology range
         if len(output_list) >= 3:
             lower_output = output_list[0]

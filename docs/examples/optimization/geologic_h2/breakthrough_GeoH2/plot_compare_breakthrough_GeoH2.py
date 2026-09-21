@@ -44,5 +44,5 @@ scenario_tech_outputs = {
 colors = ["#d62728", "#ff7f0e","#1f77b4", "#50df50"]
 #,"#bc87ea"
 # plot_tech_scenarios_trends(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
-plot_tech_scenario_jet_fuel(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
-# plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
+# plot_tech_scenario_jet_fuel(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
+plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, save_fig=True, directory_filename=str(FIG_DIR))
