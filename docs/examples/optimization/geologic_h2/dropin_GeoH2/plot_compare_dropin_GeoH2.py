@@ -15,7 +15,7 @@ FIG_DIR.mkdir(exist_ok=True)
 
 BACKGROUND = "SSP2-26"
 
-def load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="moderate", preferential_energy=False, low_demand_formulation=False):
+def load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="Optimistic", preferential_energy=False, low_demand_formulation=False):
     return [
         single_policy_scenario_optimization(
             global_scenario_name=BACKGROUND,
@@ -34,11 +34,10 @@ def load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic
     ]
 
 scenario_tech_outputs = {
-    "Drop-in low-demand": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, preferential_energy=False, low_demand_formulation=True),
-    # "Drop-in low-demand - No GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, low_demand_formulation=True),
-    "Drop-in low-demand - Low GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="pessimistic", preferential_energy=False, low_demand_formulation=True),
-    "Drop-in low-demand - Mod GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="moderate",  preferential_energy=False, low_demand_formulation=True),
-    "Drop-in low-demand - Opt GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="optimistic", preferential_energy=False, low_demand_formulation=True),
+    "Drop-in": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=False, preferential_energy=False, low_demand_formulation=True),
+    "Drop-in - Low GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="Pessimistic", preferential_energy=False, low_demand_formulation=True),
+    "Drop-in - Mod GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="Moderate",  preferential_energy=False, low_demand_formulation=True),
+    "Drop-in - Opt GeoH2": load_results_for_geoh2(drop_in_only=True, include_geologic_h2=True, geologic_h2_option="optimistic", preferential_energy=False, low_demand_formulation=True),
 }
 
 colors = ["#d62728", "#ff7f0e","#1f77b4", "#50df50"]

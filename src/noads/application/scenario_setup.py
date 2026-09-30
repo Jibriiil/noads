@@ -53,7 +53,7 @@ def single_scenario_setup(
     integrate_constraints=False,
     demand_aversion=False,
     include_geologic_h2=False,
-    geologic_h2_availability="moderate",
+    geologic_h2_availability="Optimistic",
     drop_in_only=False,
     fossil_kerosene_only=False,
     preferential_energy=False,
@@ -85,7 +85,7 @@ def single_scenario_setup(
         demand_aversion: Whether to use the low-demand formulation (supply caps and
             discounted price-increase burden).
         include_geologic_h2: Whether to include geological hydrogen as a primary energy source.
-        geologic_h2_availability: The availability of geological hydrogen (0: pessimistic (20%), 1: moderate (50%), 2: optimistic (80%)).
+        geologic_h2_availability: The availability of geological hydrogen ("Optimistic" (by default), "Moderate" or "Pessimistic).
         geologic_h2_production_years: The years for geological hydrogen production.
         geologic_h2_production_values: The values for geological hydrogen production.
         drop_in_only: Whether to restrict the fleet to drop-in (Jet-A) aircraft.
@@ -100,7 +100,7 @@ def single_scenario_setup(
         constraint name to its bound and sign), the energy mix, and the fleet.
     """
     resources_fair_share = 8.6e-2 if preferential_energy else 5.0e-2
-    GEOLOGIC_H2_fair_share = {"optimistic": 0.8,"moderate": 0.5,"pessimistic": 0.2}
+    GEOLOGIC_H2_fair_share = 8.6e-2 
     ar6_data, years_data = get_ar6_input_data(plot_data=plot_scenario_data)
     energy_mix, fleet = initialize_base_objects(drop_in_only, technology_index, include_geologic_h2)
 
@@ -202,7 +202,7 @@ def single_scenario_setup(
             # From LCA geological hydrogen https://doi.org/10.1016/j.joule.2023.07.001
             "Geological_extraction.direct.CO2_index": 3.0,
             "Geological_extraction.GEOLOGIC_H2.efficiency": 0.92,
-            "GEOLOGIC_H2.fair_share": GEOLOGIC_H2_fair_share[geologic_h2_availability],
+            "GEOLOGIC_H2.fair_share": GEOLOGIC_H2_fair_share,
            
         })
         
@@ -324,8 +324,8 @@ def single_scenario_setup(
         )
         for name in ar6_data
     })
-    if include_geologic_h2:
-        geologic_h2_years, geologic_h2_values = get_geologic_h2_resources()
+    if include_geologic_h2 and geologic_h2_availability in ["Optimistic", "Moderate", "Pessimistic"]:
+        geologic_h2_years, geologic_h2_values = get_geologic_h2_resources(Geo_H2_option=geologic_h2_availability, noads_start_year= start_year, production_end_year=end_year)
         scenario_inputs["GEOLOGIC_H2.global_production"] = np_array(
             interpolate_data(
                 x=temporal_scenario.time_vector,
@@ -463,7 +463,7 @@ def multi_scenario_setup(
     integrate_constraints=False,
     demand_aversion=False,
     include_geologic_h2=False,
-    geologic_h2_availability="moderate",
+    geologic_h2_availability="Optimistic",
     fossil_kerosene_only=False,
     drop_in_only=False,
     preferential_energy=False,

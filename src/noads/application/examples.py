@@ -50,7 +50,7 @@ def single_policy_scenario_optimization(
     carbon_budget_percent=3.0,
     technology_index=0,
     include_geologic_h2=False,
-    geologic_h2_availability="moderate",
+    geologic_h2_availability="Optimistic",
     drop_in_only=False,
     fossil_kerosene_only=False,
     low_demand_formulation=False,
@@ -84,7 +84,7 @@ def single_policy_scenario_optimization(
     """
     # Build scenario name with suffixes
     scenario_name = global_scenario_name
-    if include_geologic_h2 and geologic_h2_availability in ["optimistic", "moderate", "pessimistic"]:
+    if include_geologic_h2 and geologic_h2_availability in ["Optimistic", "Moderate", "Pessimistic"]:
         scenario_name += f"-GeoH2-{geologic_h2_availability[:3]}"
 
     if fossil_kerosene_only:
@@ -262,7 +262,7 @@ def single_policy_robust_scenario_optimization(
     carbon_budget_percent=3.0,
     technology_index=0,
     include_geologic_h2=False,
-    geologic_h2_availability="moderate",
+    geologic_h2_availability="Optimistic",
     drop_in_only=False,
     fossil_kerosene_only=False,
     low_demand_formulation=False,
@@ -274,7 +274,7 @@ def single_policy_robust_scenario_optimization(
     save_figs=False,
 ):
     """Optimal decarbonization scenario robust to several background scenarios."""
-    if include_geologic_h2 and geologic_h2_availability in ["optimistic", "moderate", "pessimistic"]:
+    if include_geologic_h2 and geologic_h2_availability in ["Optimistic", "Moderate", "Pessimistic"]:
         scenario_name += f"-GeoH2-{geologic_h2_availability[:3]}"
 
     if fossil_kerosene_only:
@@ -361,7 +361,7 @@ def single_policy_robust_scenario_optimization(
             aggregate_constraints=False,
             demand_aversion=low_demand_formulation,
             include_geologic_h2=False,
-            geologic_h2_availability="moderate",
+            geologic_h2_availability="Optimistic",
             fossil_kerosene_only=fossil_kerosene_only,
             drop_in_only=drop_in_only,
             preferential_energy=preferential_energy,
