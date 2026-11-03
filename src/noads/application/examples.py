@@ -266,7 +266,7 @@ def single_policy_scenario_optimization(
     elif technology_index == 2:
         scenario_name += "-upTech"
     if global_scenario_name in gcam_scenario_to_model:
-    scenario_name += "-GCAM7p1-CMIP7Low" # Added at the end for better visibility (the scenario name is well recognizable (GeoH2-2, GeoH2-3, etc.) and the suffixes are more readable at the end of the name)
+        scenario_name += "-GCAM7p1-CMIP7Low" # Added at the end for better visibility (the scenario name is well recognizable (GeoH2-2, GeoH2-3, etc.) and the suffixes are more readable at the end of the name)
 
     configure_logger()
 

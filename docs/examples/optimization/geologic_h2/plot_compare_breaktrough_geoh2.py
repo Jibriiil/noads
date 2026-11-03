@@ -26,7 +26,7 @@ from noads.application.visualization import (
 TECH_SCENARIOS = [1]
 
 
-def load_results(world, drop_in_only=True):
+def load_results(world, drop_in_only=False):
     return [
         single_policy_scenario_optimization(
             global_scenario_name=world,
@@ -46,9 +46,9 @@ def load_results(world, drop_in_only=True):
 
 
 scenario_tech_outputs = {
-    "Drop-in avail. - No GeoH2": load_results("NoGeoH2"),
-    "Drop-in avail. - GeoH2 $2/kg": load_results("GeoH2-2"),
-    "Drop-in avail. - GeoH2 LowAlt $2/kg": load_results("GeoH2-LowAlt-2"),
+    "Breakthrough avail. - No GeoH2": load_results("NoGeoH2"),
+    "Breakthrough avail. - GeoH2 $2/kg": load_results("GeoH2-2"),
+    "Breakthrough avail. - GeoH2 LowAlt $2/kg": load_results("GeoH2-LowAlt-2"),
 }
 colors = ["#d62728", "#1f77b4", "#50df50"]
 
@@ -59,5 +59,5 @@ plot_tech_scenarios_trends(scenario_tech_outputs, colors, save_fig=True)
 plot_tech_scenario_jet_fuel(scenario_tech_outputs, colors, save_fig=True)
 
 #%%
-plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, save_fig=True)
+plot_tech_scenario_fleet_carriers(scenario_tech_outputs, colors, zoom_battery=True, save_fig=True)
 # %%
