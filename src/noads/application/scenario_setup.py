@@ -24,8 +24,11 @@ from gemseo import create_design_space
 from gemseo_jax.jax_discipline import JAXDiscipline
 from numpy import array as np_array
 from numpy import ones as np_ones
+from numpy import maximum as np_maximum
 
 from noads.application.background_scenario_data import get_ar6_input_data
+from noads.application.background_scenario_data import gcam_scenario_to_model
+from noads.application.background_scenario_data import get_gcam_input_data
 from noads.application.base_objects import category_lifetime
 from noads.application.base_objects import initialize_base_objects
 from noads.core.models.interpolation import interpolate_data
@@ -55,6 +58,10 @@ UPDATE_FIRST_ENTRY_INTO_SERVICE = {"JetA": 2035.0, "alternative": 2040.0}
 """Earliest entry-into-service of new aircraft with the update model: Jet-A aircraft
 (turbofans and turboprops) and alternative architectures (hydrogen, battery)."""
 
+GEOLOGIC_H2_MIN_PRODUCTION = 1e6
+# Lower bound of the global geologic H2 production in MJ/year (1e-6 EJ/year). The
+# fair-share constraint divides by the production, which is zero before 2030 and in the
+# scenario without geologic H2.
 
 def first_entry_into_service(aircraft_name, aircraft_model="paper"):
     """Earliest entry-into-service of a new aircraft (its design variable bound).
@@ -100,6 +107,9 @@ def _ar6_input_data(end_year, plot_data=False):
         return get_ar6_input_data(end_year=2100, plot_data=plot_data)
     return get_ar6_input_data(plot_data=plot_data)
 
+def _gcam_input_data(end_year):
+    """GCAM input data, loaded until 2100 only when the simulation needs it."""
+    return get_gcam_input_data(end_year=2100 if end_year > 2080 else 2080)
 
 def single_scenario_setup(
     name: str,
@@ -111,6 +121,7 @@ def single_scenario_setup(
     technology_index=0,
     integrate_constraints=False,
     demand_aversion=False,
+    include_geologic_h2=False,
     drop_in_only=False,
     fossil_kerosene_only=False,
     preferential_energy=False,
@@ -159,19 +170,40 @@ def single_scenario_setup(
             (except the first Jet-A generation). Defaults to 2060 with both aircraft
             models (:data:`LAST_ENTRY_INTO_SERVICE`); up to 2080 with the update
             model, whose technology parameters are defined until then.
+        include_geologic_h2: Whether to add geological hydrogen as a primary
+            resource. Its global production comes from the GCAM background
+            scenario, which must then be one of
+            :data:`noads.application.background_scenario_data.gcam_scenario_to_model`.
 
     Returns:
         The temporal scenario, the design space, the constraints (mapping each
         constraint name to its bound and sign), the energy mix, and the fleet.
+    
+    Raises:
+        ValueError: If geological hydrogen is included with a non-GCAM GeoH2 background
+            scenario.
     """
+    if include_geologic_h2 and background_scenario_name not in gcam_scenario_to_model:
+        msg= "Geological hydrogen is only available with the GCAM background scenarios"
+        raise ValueError(msg)
+    
     resources_fair_share = 8.6e-2 if preferential_energy else 5.0e-2
+    geologic_h2_fair_share = 8.6e-2
+    
     if end_year is None:
         end_year = END_YEAR[aircraft_model]
     if last_entry_into_service is None:
         last_entry_into_service = LAST_ENTRY_INTO_SERVICE[aircraft_model]
-    ar6_data, years_data = _ar6_input_data(end_year, plot_scenario_data)
+
+    if background_scenario_name in gcam_scenario_to_model:
+        background_data, years_data = _gcam_input_data(end_year)
+    else:
+        background_data, years_data = _ar6_input_data(end_year, plot_scenario_data)
+
+    geologic_h2_production = background_data.pop("GEOLOGIC_H2.global_production", None)
+
     energy_mix, fleet = initialize_base_objects(
-        drop_in_only, technology_index, aircraft_model, last_entry_into_service
+        drop_in_only, technology_index, aircraft_model, last_entry_into_service, include_geologic_h2
     )
 
     temporal_constraints = [
@@ -209,7 +241,7 @@ def single_scenario_setup(
             interpolate_data(
                 x=2019.0,
                 x_data=np_array(years_data),
-                y_data=np_array(ar6_data["gdp_per_capita"][background_scenario_name]),
+                y_data=np_array(background_data["gdp_per_capita"][background_scenario_name]),
                 cubic=True,
             )
         ),
@@ -217,7 +249,7 @@ def single_scenario_setup(
             interpolate_data(
                 x=2024.0,
                 x_data=np_array(years_data),
-                y_data=np_array(ar6_data["gdp_per_capita"][background_scenario_name]),
+                y_data=np_array(background_data["gdp_per_capita"][background_scenario_name]),
                 cubic=True,
             )
         ),
@@ -266,6 +298,15 @@ def single_scenario_setup(
         "Power_to_liquid.ELECTRICITY.efficiency": (1.53, 1.53 * 1.08, 1.53 * 1.16),
         "Power_to_liquid.GAS-H2.efficiency": (0.53, 0.53 * 1.06, 0.53 * 1.12),
     }
+    if include_geologic_h2:
+        constants.update({
+            "GEOLOGIC_H2.CO2_index": 0.0,
+            "GEOLOGIC_H2.fair_share": geologic_h2_fair_share,
+            # Extraction and processing, site boundary: 0.4 kg CO2e/kg H2 
+            # (Brandt, 2023, https://doi.org/10.1016/j.joule.2023.07.001).
+            "Geological_extraction.direct.CO2_index": 3.3,
+            "Geological_extraction.GEOLOGIC_H2.efficiency": 0.92,
+        })
     if not drop_in_only:
         constants.update({
             "H2_liquefaction.direct.CO2_index": 0.0,
@@ -378,12 +419,24 @@ def single_scenario_setup(
             interpolate_data(
                 x=temporal_scenario.time_vector,
                 x_data=np_array(years_data),
-                y_data=np_array(ar6_data[name][background_scenario_name]),
+                y_data=np_array(background_data[name][background_scenario_name]),
                 cubic=True,
             )
         )
-        for name in ar6_data
+        for name in background_data
     })
+    if include_geologic_h2:
+        # Linear interpolation: a cubic one undershoots below zero before 2030.
+        scenario_inputs.update({
+            "GEOLOGIC_H2.global_production": np_maximum(np_array
+            (interpolate_data(
+                    x=temporal_scenario.time_vector,
+                    x_data=np_array(years_data),
+                    y_data=np_array(geologic_h2_production[background_scenario_name]),
+                    cubic=True,
+                            )
+            ), GEOLOGIC_H2_MIN_PRODUCTION),
+        })
     temporal_scenario.discipline.default_input_data = scenario_inputs
     if compile_jit:
         temporal_scenario.discipline.compile_jit(pre_run=False)
@@ -414,6 +467,16 @@ def single_scenario_setup(
                         )
                     )
                     value = 0.1 * upper_value
+                elif pathway.name == "Geological_extraction":
+                    # No geologic H2 before its production starts (none at all in
+                    # the scenario without geologic H2).
+                    production = interpolate_data(
+                        x=temporal_scenario.time_interpolation,
+                        x_data=np_array(years_data),
+                        y_data=np_array(geologic_h2_production[background_scenario_name]),
+                    )
+                    upper_value = 1.0 * (production > 0.0)
+                    value = upper_value / len(energy.pathways)
                 else:
                     n_pathways = len(energy.pathways)
                     upper_value = 1.0
@@ -522,6 +585,7 @@ def multi_scenario_setup(
     aggregate_constraints=False,
     integrate_constraints=False,
     demand_aversion=False,
+    include_geologic_h2=False,
     fossil_kerosene_only=False,
     drop_in_only=False,
     preferential_energy=False,
@@ -537,7 +601,16 @@ def multi_scenario_setup(
     variables are shared across the ensemble (``fixed.`` prefix) while the energy
     mix variables are scenario-specific, and ensemble-mean outputs (``mean.``
     prefix) are exposed for the robust objective.
+
+    Raises:
+        ValueError: If the background scenarios mix GCAM and AR6 scenarios.
     """
+    is_gcam = [name in gcam_scenario_to_model for name in background_scenario_names]
+    if any(is_gcam) and not all(is_gcam):
+        msg = "The background scenarios must be all GCAM or all AR6."
+        raise ValueError(msg)
+
+    
     if end_year is None:
         end_year = END_YEAR[aircraft_model]
     temporal_scenario, _, constraints, energy_mix, fleet = single_scenario_setup(
@@ -550,6 +623,7 @@ def multi_scenario_setup(
         technology_index=technology_index,
         integrate_constraints=integrate_constraints,
         demand_aversion=demand_aversion,
+        include_geologic_h2=include_geologic_h2,
         fossil_kerosene_only=fossil_kerosene_only,
         drop_in_only=drop_in_only,
         preferential_energy=preferential_energy,
@@ -582,7 +656,12 @@ def multi_scenario_setup(
     ])
     # all except controls
 
-    ar6_data, years_data = _ar6_input_data(end_year)
+    if all(is_gcam):
+        background_data, years_data = _gcam_input_data(end_year)
+    else:
+        background_data, years_data = _ar6_input_data(end_year)
+
+    geologic_h2_production = background_data.pop("GEOLOGIC_H2.global_production", None)
 
     multi_scenario = MultiScenario(
         name=name,
@@ -607,23 +686,38 @@ def multi_scenario_setup(
             interpolate_data(
                 x=temporal_scenario.time_vector,
                 x_data=np_array(years_data),
-                y_data=np_array(ar6_data[name][scenario]),
+                y_data=np_array(background_data[name][scenario]),
                 cubic=True,
             )
         )
         for scenario in background_scenario_names
-        for name in ar6_data
+        for name in background_data
     })
     multi_scenario_inputs.update({
         f"{scenario}.constant.gdp_per_capita_covid_end": np_array([
             interpolate_data(
                 x=2024.0,
                 x_data=np_array(years_data),
-                y_data=np_array(ar6_data["gdp_per_capita"][scenario]),
+                y_data=np_array(background_data["gdp_per_capita"][scenario]),
             )
         ])
         for scenario in background_scenario_names
     })
+
+    if include_geologic_h2:
+        multi_scenario_inputs.update({
+            f"{scenario}.GEOLOGIC_H2.global_production": np_maximum(
+                np_array(
+                    interpolate_data(
+                        x=temporal_scenario.time_vector,
+                        x_data=np_array(years_data),
+                        y_data=np_array(geologic_h2_production[scenario]),
+                                    )
+                        ),
+                GEOLOGIC_H2_MIN_PRODUCTION,)
+            for scenario in background_scenario_names
+        })
+    
     multi_scenario.discipline.default_input_data = multi_scenario_inputs
     multi_scenario.discipline.compile_jit(pre_run=False)
 
@@ -646,6 +740,16 @@ def multi_scenario_setup(
                             y_data=np_array(refuel_eu_efuel),
                         )
                         value = 0.1 * upper_value
+                    elif pathway.name == "Geological_extraction":
+                        # No geologic H2 before its production starts (none at all in
+                        # the scenario without geologic H2).
+                        production = interpolate_data(
+                            x=temporal_scenario.time_interpolation,
+                            x_data=np_array(years_data),
+                            y_data=np_array(geologic_h2_production[scenario]),
+                        )
+                        upper_value = 1.0 * (production > 0.0)
+                        value = upper_value / len(energy.pathways)
                     else:
                         n_pathways = len(energy.pathways)
                         upper_value = 1.0

@@ -37,6 +37,7 @@ from noads.application.scenario_setup import multi_scenario_setup
 from noads.application.scenario_setup import single_scenario_setup
 from noads.application.visualization import plot_multi_scenario_result
 from noads.application.visualization import plot_single_scenario_result
+from noads.application.background_scenario_data import gcam_scenario_to_model
 
 LOGGER = getLogger(__name__)
 
@@ -205,6 +206,7 @@ def single_policy_scenario_optimization(
     fossil_kerosene_only=False,
     low_demand_formulation=False,
     preferential_energy=False,
+    include_geologic_h2=False,
     load_optimum=False,
     plot_optimum=True,
     save_optimum=False,
@@ -239,6 +241,8 @@ def single_policy_scenario_optimization(
         history_path: A JSON lines file recording the design of every optimizer
             iteration, converted into :data:`HISTORY_FILE` next to it when the
             optimum is saved; ``None`` to not record the iterations.
+        include_geologic_h2: Add geological hydrogen as a primary resource. The
+            background scenario must then be a GCAM scenario (e.g. "GeoH2-2").
 
     Returns:
         Dictionary containing optimal output values.
@@ -261,6 +265,8 @@ def single_policy_scenario_optimization(
         scenario_name += "-midTech"
     elif technology_index == 2:
         scenario_name += "-upTech"
+    if global_scenario_name in gcam_scenario_to_model:
+    scenario_name += "-GCAM7p1-CMIP7Low" # Added at the end for better visibility (the scenario name is well recognizable (GeoH2-2, GeoH2-3, etc.) and the suffixes are more readable at the end of the name)
 
     configure_logger()
 
@@ -295,6 +301,7 @@ def single_policy_scenario_optimization(
                         drop_in_only=drop_in_only,
                         fossil_kerosene_only=fossil_kerosene_only,
                         preferential_energy=preferential_energy,
+                        include_geologic_h2=include_geologic_h2,
                         aircraft_model=aircraft_model,
                         last_entry_into_service=last_entry_into_service,
                     )
@@ -423,6 +430,7 @@ def single_policy_robust_scenario_optimization(
     fossil_kerosene_only=False,
     low_demand_formulation=False,
     preferential_energy=False,
+    include_geologic_h2=False,
     load_optimum=False,
     plot_optimum=True,
     save_optimum=False,
@@ -445,6 +453,10 @@ def single_policy_robust_scenario_optimization(
     SLSQP restarts at each resume. The checkpoint is deleted once the optimum is
     saved. ``history_path`` records the design of every iteration, across resumes,
     as in :func:`single_policy_scenario_optimization`.
+
+    ``include_geologic_h2`` adds geological hydrogen, as in
+    :func:`single_policy_scenario_optimization`; the background scenarios must
+    then be GCAM scenarios.
     """
     if fossil_kerosene_only:
         scenario_name += "-Fossil"
@@ -462,6 +474,8 @@ def single_policy_robust_scenario_optimization(
         scenario_name += "-midTech"
     elif technology_index == 2:
         scenario_name += "-upTech"
+    if global_scenario_name in gcam_scenario_to_model:
+        scenario_name += "-GCAM7p1-CMIP7Low" # Added at the end for better visibility (the scenario name is well recognizable (GeoH2-2, GeoH2-3, etc.) and the suffixes are more readable at the end of the name)
 
     configure_logger()
 
@@ -496,6 +510,7 @@ def single_policy_robust_scenario_optimization(
                         demand_aversion=low_demand_formulation,
                         drop_in_only=drop_in_only,
                         preferential_energy=preferential_energy,
+                        include_geologic_h2=include_geologic_h2,
                         aircraft_model=aircraft_model,
                         last_entry_into_service=last_entry_into_service,
                     )
@@ -533,6 +548,7 @@ def single_policy_robust_scenario_optimization(
             fossil_kerosene_only=fossil_kerosene_only,
             drop_in_only=drop_in_only,
             preferential_energy=preferential_energy,
+            include_geologic_h2=include_geologic_h2,
             aircraft_model=aircraft_model,
             last_entry_into_service=last_entry_into_service,
         )
