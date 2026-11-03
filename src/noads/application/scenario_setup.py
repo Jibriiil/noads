@@ -305,7 +305,18 @@ def single_scenario_setup(
             # Extraction and processing, site boundary: 0.4 kg CO2e/kg H2 
             # (Brandt, 2023, https://doi.org/10.1016/j.joule.2023.07.001).
             "Geological_extraction.direct.CO2_index": 3.3,
-            "Geological_extraction.GEOLOGIC_H2.efficiency": 0.92,
+            # Pipeline compression, GCAM 7.1 H2 pipeline: 0.0173 MJ elec per MJ H2.
+            # (cf. hydrogen_technology_IO coefficients in the raw files of the GCAM outputs : 0.01729)
+            "Geological_extraction.ELECTRICITY.efficiency": 1.0/0.0173,
+        })
+        # Pipeline losses, GCAM 7.1 H2 pipeline: 1.020, 1.016 and 1.010 MJ of H2 per
+        # MJ delivered in 2025, 2035 and 2050 (cf. hydrogen_technology_IO coefficients in the raw files of the GCAM outputs : 0.01729)
+        interpolated_2025_2035_2050.update({
+            "Geological_extraction.GEOLOGIC_H2.efficiency": (
+                1.0 / 1.02,
+                1.0 / 1.016,
+                1.0 / 1.01,
+            ),
         })
     if not drop_in_only:
         constants.update({

@@ -541,7 +541,7 @@ def initialize_base_objects(
     # Placed before  gas reforming which takes the remaining share and has no control of its own
     geological_extraction = ProductionPathway("Geological_extraction", 
                                               impacts=[co2],
-                                              input_streams=[geologic_h2])
+                                              input_streams=[geologic_h2, electricity])
     
     gh2 = ProducedEnergy(
         "GAS-H2",
