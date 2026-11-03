@@ -58,6 +58,26 @@ scenario_to_model = {
     # "SSP5-45": "REMIND-MAgPIE 1.5",
 }
 
+
+# GCAM 7.1 runs with geologic hydrogen (O'Rourke et al., 2026), rerun with a CO2
+# constraint following the CMIP7 ScenarioMIP "Low" median trajectory (energy and
+# industrial processes) over 2025-2100.
+GCAM_MODEL = "GCAM 7.1-geoH2-CMIP7Low"
+
+# GCAM background scenarios: no geologic H2, and geologic H2 at 1, 2 or 3 $/kg, with
+# (LowAlt) or without limits on CCS, bioenergy and new nuclear.
+
+gcam_scenario_to_model = {
+    "NoGeoH2": GCAM_MODEL,
+    "GeoH2-1": GCAM_MODEL,
+    "GeoH2-2": GCAM_MODEL,
+    "GeoH2-3": GCAM_MODEL,
+    "GeoH2-LowAlt-1": GCAM_MODEL,
+    "GeoH2-LowAlt-2": GCAM_MODEL,
+    "GeoH2-LowAlt-3": GCAM_MODEL,
+}
+
+
 model_to_colors = {
     "IMAGE 3.2": "lightseagreen",
     "REMIND-MAgPIE 2.1-4.3": "chocolate",
@@ -97,28 +117,32 @@ def get_scenario_color(scenario_name: str):
     return "darkviolet"
 
 
-def get_ar6_input_data(start_year=2010, end_year=2080, plot_data=True):
+def get_ar6_input_data(start_year=2010, end_year=2080, plot_data=True, 
+                       data_folder="ar6_scenarios_data", scenarios=None):
     """Get relevant aviation input data from AR6 scenarios."""
+    if scenarios is None:
+        scenarios = scenario_to_model
+
     population_data = read_csv(
-        data_file("noads.application", "ar6_scenarios_data", "population.csv"),
+        data_file("noads.application", data_folder, "population.csv"),
         index_col=1,
     )
     gdp_data = read_csv(
-        data_file("noads.application", "ar6_scenarios_data", "gdp.csv"),
+        data_file("noads.application", data_folder, "gdp.csv"),
         index_col=1,
     )
     electricity_emissions_data = read_csv(
         data_file(
-            "noads.application", "ar6_scenarios_data", "electricity_emissions.csv"
+            "noads.application", data_folder, "electricity_emissions.csv"
         ),
         index_col=1,
     )
     final_electricity_data = read_csv(
-        data_file("noads.application", "ar6_scenarios_data", "final_electricity.csv"),
+        data_file("noads.application", data_folder, "final_electricity.csv"),
         index_col=1,
     )
     biomass_data = read_csv(
-        data_file("noads.application", "ar6_scenarios_data", "biomass_total.csv"),
+        data_file("noads.application", data_folder, "biomass_total.csv"),
         index_col=1,
     )
 
@@ -145,7 +169,7 @@ def get_ar6_input_data(start_year=2010, end_year=2080, plot_data=True):
         "BIOMASS.global_production": {},
     }
     years = []
-    for scenario, model in scenario_to_model.items():
+    for scenario, model in scenarios.items():
         for variable in ar6_data:
             ar6_data[variable][scenario] = []
         for year in all_years:
@@ -214,7 +238,7 @@ def get_ar6_input_data(start_year=2010, end_year=2080, plot_data=True):
                     * var_units_name_convert["BIOMASS.global_production"][-1]
                 )
 
-    if plot_data:
+    if plot_data and data_folder == "ar6_scenarios_data":
         var_groups = {
             # "socioeconomic": ["population", "gdp", "gdp_per_capita"],
             # "energy": [
@@ -270,6 +294,36 @@ def get_ar6_input_data(start_year=2010, end_year=2080, plot_data=True):
     del ar6_data["gdp"]
     return ar6_data, years
 
+def get_gcam_input_data(start_year=2010, end_year=2080):
+    """Get the background data and the geologic hydrogen production of the GCAM runs.
+
+    The files of gcam_scenarios_data have the format of the AR6 files. Electricity
+    is the low-carbon final electricity (wind, solar, hydro, geothermal and nuclear),
+    and its emissions are life-cycle emissions, so that their ratio is the life-cycle
+    emission factor.
+    It returns the data per variable and scenario (as :func:get_ar6_input_data, plus
+            GEOLOGIC_H2.global_production in MJ/year), and the years."""
+
+
+    gcam_data, years = get_ar6_input_data(
+        start_year=start_year,
+        end_year=end_year,
+        plot_data=False,
+        data_folder="gcam_scenarios_data",
+        scenarios=gcam_scenario_to_model,
+    )
+    geologic_h2_data = read_csv(
+        data_file("noads.application", "gcam_scenarios_data", "geologic_h2.csv"),
+        index_col=1,
+    )
+    gcam_data["GEOLOGIC_H2.global_production"] = {
+        scenario: [
+            float(geologic_h2_data.loc[scenario, str(year)]) * 1e12  # EJ to MJ
+            for year in years
+        ]
+        for scenario in gcam_scenario_to_model
+    }
+    return gcam_data, years
 
 def get_ar6_output_data(start_year=2010, end_year=2080, plot_data=True):
     """Get relevant aviation output data from AR6 scenarios."""
