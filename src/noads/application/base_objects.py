@@ -441,6 +441,7 @@ def initialize_base_objects(
     technology_index=0,
     aircraft_model="paper",
     last_entry_into_service=2060.0,
+    include_geologic_h2=False
 ):
     """Build the energy mix and global fleet of the paper's scenarios.
 
@@ -459,6 +460,9 @@ def initialize_base_objects(
             the update model, the electric and fuel cell aircraft of a market are
             included only if they are feasible by then
             (:func:`update_design_feasible`).
+        include_geologic_h2: Whether to add geological hydrogen as a primary
+            resource, extracted into gaseous hydrogen and constrained by a fair
+            share of its global production.
 
     Returns:
         The energy mix and the fleet assembly.
@@ -482,6 +486,8 @@ def initialize_base_objects(
     biomass = Energy("BIOMASS")
     electricity = Energy("ELECTRICITY")
     # natural_gas = Energy("NATURAL_GAS")
+    geologic_h2= Energy("GEOLOGIC_H2") 
+
 
     # Production Pathways and their associated Secondary energies ......................
 
@@ -527,10 +533,18 @@ def initialize_base_objects(
         impacts=[co2],
         input_streams=[],
     )
+    # Geological hydrogen: extraction and processing of natural H2 accumulations.
+    # Placed before  gas reforming which takes the remaining share and has no control of its own
+    geological_extraction = ProductionPathway("Geological_extraction", 
+                                              impacts=[co2],
+                                              input_streams=[geologic_h2])
+    
     gh2 = ProducedEnergy(
         "GAS-H2",
-        pathways=[electrolysis, gas],
+        pathways=[electrolysis, geological_extraction, gas]
+        if include_geologic_h2 else [electrolysis, gas]
     )
+
     # E-fuel
     ptl = ProductionPathway(
         "Power_to_liquid",
@@ -646,7 +660,8 @@ def initialize_base_objects(
         #         }
         #     )
 
-    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass])
+    energy_mix = EnergyMix(energies, inputs_to_constrain=[electricity, biomass, geologic_h2]
+                            if include_geologic_h2 else [electricity, biomass])
 
     # Aircraft technology evolution parameters
     tech_params = aircraft_tech_params(technology_index, aircraft_model)
