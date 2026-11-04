@@ -337,6 +337,7 @@ def single_policy_scenario_optimization(
             drop_in_only=drop_in_only,
             fossil_kerosene_only=fossil_kerosene_only,
             preferential_energy=preferential_energy,
+            include_geologic_h2=include_geologic_h2,
             aircraft_model=aircraft_model,
             last_entry_into_service=last_entry_into_service,
         )
