@@ -27,10 +27,10 @@ os.environ["NOADS_RESULTS_DIR"] = str(GEOH2_DIR)
 #     "GeoH2-LowAlt-3": GCAM_MODEL,
 # }
 
-# WORLDS = ["NoGeoH2", "GeoH2-2", "GeoH2-LowAlt-2"]
-WORLDS=["GeoH2-2"]
+WORLDS = ["NoGeoH2", "GeoH2-2", "GeoH2-LowAlt-2"]
+# WORLDS=["GeoH2-2"]
 # DROP_IN_ONLY = [True, False]  # drop-in, breakthrough
-DROP_IN_ONLY = [False]  # drop-in, breakthrough
+DROP_IN_ONLY = [True]  # drop-in, breakthrough
 TECH_SCENARIOS = [1]  # 0: Lower, 1: Mid, 2: Upper
 
 for world, drop_in_only, tech in itertools.product(WORLDS, DROP_IN_ONLY, TECH_SCENARIOS):
