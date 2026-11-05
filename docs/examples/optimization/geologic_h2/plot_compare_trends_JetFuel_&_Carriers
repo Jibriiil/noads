@@ -1,0 +1,206 @@
+
+#%%
+import os
+from pathlib import Path
+
+# Results of the GCAM runs in this folder ("update" added to the name)
+try:
+    GEOH2_DIR = Path(__file__).resolve().parent
+except NameError:  # interactive window
+    GEOH2_DIR = Path.cwd()
+if GEOH2_DIR.name != "geologic_h2":  # launched from the repository root
+    GEOH2_DIR = Path.cwd() / "docs" / "examples" / "optimization" / "geologic_h2"
+os.environ["NOADS_RESULTS_DIR"] = str(GEOH2_DIR)
+
+FIG_DIR = GEOH2_DIR/"Figures_dropin&breakthrough_Trends_JetFuel_Carriers"  # folder to save the figures
+FIG_DIR.mkdir(exist_ok=True)
+
+#%%
+import numpy as np
+from matplotlib.lines import Line2D
+from scipy.integrate import cumulative_trapezoid
+from noads.application.examples import single_policy_scenario_optimization
+from noads.application.visualization import (
+    _aggregate_fleet_asks,
+    _configure_fleet_carrier_axes,
+    _configure_jet_fuel_axes,
+    _configure_trend_axes,
+    _plot_fleet_carrier_data,
+    _plot_jet_fuel_data,
+    _plot_trend_data,
+    _setup_fleet_carrier_axes,
+    _setup_jet_fuel_axes,
+    _setup_trend_axes,
+)
+#%%
+FAMILIES = {"drop-in": True, "breakthrough": False}
+
+VARIANTS = {
+    "trend": {"preferential_energy": False, "low_demand_formulation": False},
+    "availability": {"preferential_energy": True, "low_demand_formulation": False},
+    "low-demand": {"preferential_energy": False, "low_demand_formulation": True}
+}
+
+VARIANT_COLORS = {"trend": "tab:blue", "availability": "tab:orange", "low-demand": "tab:green"}
+
+WORLDS = ["NoGeoH2", "GeoH2-2", "GeoH2-LowAlt-2"]
+
+WORLD_STYLES = {"NoGeoH2": "-", "GeoH2-2": "--", "GeoH2-LowAlt-2": ":"}
+
+WORLD_LABELS = {
+    "NoGeoH2": "No GeoH$_2$",
+    "GeoH2-2": "GeoH$_2$ \\$2/kg",
+    "GeoH2-LowAlt-2": "GeoH$_2$ LowAlt \\$2/kg"}
+
+LINEWIDTH = 1.5
+ALPHA = 0.15
+
+#%%
+# Quantities to plot
+TREND_QUANTITIES = {
+    "rpk": lambda o: o["rpk"] * 1e-12,
+    "co2": lambda o: o["CO2"] * 1e-12,
+    "energy": lambda o: o["mean_energy_per_ask"],
+    "carbon": lambda o: o["JET-A.mean_consumption_per_ask"] * o["JET-A.CO2_index"],
+    "budget": lambda o: cumulative_trapezoid(o["CO2"], o["year"], initial=0) * 1e-15,
+}
+JET_FUEL_QUANTITIES = {
+    "kerosene": lambda o: o["JET-A.KEROSENE.consumption"] * 1e-12,
+    "biofuel": lambda o: o["JET-A.BIOFUEL.consumption"] * 1e-12,
+    "efuel": lambda o: o["JET-A.E-FUEL.consumption"] * 1e-12,
+    "efuel_inset": lambda o: o["JET-A.E-FUEL.consumption"] * 1e-12,
+}
+FLEET_QUANTITIES = {
+    "jet_a": lambda o: _aggregate_fleet_asks(o, ["JetA", "Current"]) * 1e-12,
+    "lh2": lambda o: _aggregate_fleet_asks(o, ["lH2-FuelCell", "lH2-GasTurbine"]) * 1e-12,
+    "battery": lambda o: _aggregate_fleet_asks(o, ["Battery-Electric"]) * 1e-12,
+    "battery_inset": lambda o: _aggregate_fleet_asks(o, ["Battery-Electric"]) * 1e-12,
+}
+
+#%%
+def _plot_variants_worlds(axes, quantities, plot_world, legend_axis,legend_loc,world_legend_axis, world_legend_loc, variant_outputs):
+    # variant_outputs = {variant: {world: output_optimal}}.
+    # Color = variant, linestyle = world, band = min-max over the worlds (NoGeoH2, GeoH2-2, GeoH2-LowAlt-2)
+   
+    for variant, world_outputs in variant_outputs.items():
+        color = VARIANT_COLORS[variant]
+        years = next(iter(world_outputs.values()))["year"]
+        for k, (world, output) in enumerate(world_outputs.items()):
+            plot_world(output, color, WORLD_STYLES[world], variant if k == 0 else None)
+        for key, quantity in quantities.items():
+            if key not in axes:
+                continue
+            values = np.array([quantity(o) for o in world_outputs.values()])
+            axes[key].fill_between(
+                years, values.min(axis=0), values.max(axis=0),
+                color=color, alpha=ALPHA, linewidth=0,
+            )
+    # Legend of the variants [distinguished by colors: trend, availability, low-demand]
+    axes[legend_axis].legend(loc=legend_loc, framealpha=0.5)
+    # Legend of the worlds [distinguished by linestyles: NoGeoH2, GeoH2-2, GeoH2-LowAlt-2]
+    # in another subplot (world_legend_axis) to avoid cluttering the main plot
+    world_handles = [
+            Line2D([0], [0], color="k", ls=ls, lw=LINEWIDTH, label=WORLD_LABELS[w])
+            for w, ls in WORLD_STYLES.items()
+        ]
+    axes[world_legend_axis].legend(handles=world_handles, loc=world_legend_loc, framealpha=0.5)
+
+
+
+def _finish(fig, title, save_fig, directory_filename):
+    fig.canvas.draw()
+    fig.suptitle(title, fontsize=16)
+    fig.tight_layout()
+    if save_fig:
+        fig.savefig(f"{directory_filename}.pdf")
+    else:
+        fig.show()
+
+
+def plot_variants_worlds_trends(variant_outputs, save_fig=False, directory_filename=".", title=None):
+    fig, axes, scales = _setup_trend_axes()
+    _plot_variants_worlds(
+        axes,
+        TREND_QUANTITIES,
+        lambda o, c, ls, lab: _plot_trend_data(axes, scales, o["year"], o, c, ls, LINEWIDTH, label=lab),
+        "energy",
+        "lower left",
+        "carbon",
+        "lower left",
+        variant_outputs
+    )
+    years = next(iter(next(iter(variant_outputs.values())).values()))["year"]
+    _configure_trend_axes(axes, scales, years[0], years[-1])
+    _finish(fig,title, save_fig, directory_filename)
+
+
+def plot_variants_worlds_jet_fuel(variant_outputs, zoom_efuel=False, save_fig=False,
+                                  directory_filename=".",title=None):
+    fig, axes = _setup_jet_fuel_axes()
+    _configure_jet_fuel_axes(axes, zoom_efuel=zoom_efuel)
+    _plot_variants_worlds(
+        axes,
+        JET_FUEL_QUANTITIES,
+        lambda o, c, ls, lab: _plot_jet_fuel_data(axes, o["year"], o, c, ls, LINEWIDTH, label=lab),
+        "kerosene",
+        "lower left",
+        "biofuel",
+        "upper left",
+        variant_outputs,
+    )
+    _finish(fig, title, save_fig, directory_filename)
+
+
+def plot_variants_worlds_fleet_carriers(variant_outputs, zoom_battery=False, save_fig=False,
+                                        directory_filename=".",title=None):
+    fig, axes = _setup_fleet_carrier_axes()
+    _configure_fleet_carrier_axes(axes, zoom_battery=zoom_battery)
+    _plot_variants_worlds(
+        axes,
+        FLEET_QUANTITIES,
+        lambda o, c, ls, lab: _plot_fleet_carrier_data(axes, o["year"], o, c, ls, LINEWIDTH, label=lab),
+        "jet_a",
+        "lower left",
+        "lh2",
+        "upper left",
+        variant_outputs,
+    )
+    _finish(fig, title, save_fig, directory_filename)
+
+#%%
+outputs = {
+    family: {
+        variant: {
+            world: single_policy_scenario_optimization(
+                world,
+                technology_index=1,
+                drop_in_only=drop_in_only,
+                include_geologic_h2=world != "NoGeoH2",
+                aircraft_model="update",
+                timeline="paper",
+                load_optimum=True,
+                plot_optimum=False,
+                **flags,
+            )
+            for world in WORLDS
+        }
+        for variant, flags in VARIANTS.items()
+    }
+    for family, drop_in_only in FAMILIES.items()
+}
+
+# %% Figures : 2 families x 3 types = 6 figures
+# outputs[family][variant][world] = output_optimal 
+# family: "drop-in" / "breakthrough"; variant: "trend" / "availability" / "low-demand"
+# world: "NoGeoH2" / "GeoH2-2" / "GeoH2-LowAlt-2"
+for family, variant_outputs in outputs.items():
+    plot_variants_worlds_trends(
+        variant_outputs, save_fig=True, directory_filename=str(FIG_DIR / f"trends_{family}")
+    ,title=f"Trends - {family} - Mid Tech")
+    plot_variants_worlds_jet_fuel(
+        variant_outputs, save_fig=True, zoom_efuel=True, directory_filename=str(FIG_DIR / f"jet_fuel_{family}")
+    , title=f"Jet Fuel - {family} - Mid Tech")
+    plot_variants_worlds_fleet_carriers(
+        variant_outputs, save_fig=True, zoom_battery=True, directory_filename=str(FIG_DIR / f"fleet_carriers_{family}")
+    , title=f"Fleet Carriers - {family} - Mid Tech")
+# %%

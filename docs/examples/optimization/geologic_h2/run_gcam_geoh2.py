@@ -41,7 +41,7 @@ for world, drop_in_only, tech in itertools.product(WORLDS, DROP_IN_ONLY, TECH_SC
         include_geologic_h2=world != "NoGeoH2",
         drop_in_only=drop_in_only,
         fossil_kerosene_only=False,
-        low_demand_formulation=False,
+        low_demand_formulation=True,
         preferential_energy=False,
         aircraft_model="update",
         timeline="paper",

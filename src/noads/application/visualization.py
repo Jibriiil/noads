@@ -272,7 +272,7 @@ def _configure_jet_fuel_axes(axes, zoom_efuel=False):
 
     if zoom_efuel:
         inset_ax = axes["efuel"].inset_axes([0.1, 0.5, 0.4, 0.45])
-        inset_ax.set_xlim(2040, 2070)
+        inset_ax.set_xlim(2040, 2075)
         inset_ax.set_ylim(0, 3)
         inset_ax.set_xlabel("")
         inset_ax.set_ylabel("")
@@ -298,6 +298,7 @@ def _plot_jet_fuel_data(
         color=color,
         linestyle=linestyle,
         linewidth=linewidth,
+        label=label,
     )
 
     axes["efuel"].plot(
@@ -350,8 +351,8 @@ def _configure_fleet_carrier_axes(axes, zoom_battery=False):
 
     if zoom_battery:
         inset_ax = axes["battery"].inset_axes([0.1, 0.5, 0.4, 0.45])
-        inset_ax.set_xlim(2050, 2070)
-        inset_ax.set_ylim(0, 3)
+        inset_ax.set_xlim(2050, 2075)
+        inset_ax.set_ylim(0, 6)
         inset_ax.set_xlabel("")
         inset_ax.set_ylabel("")
         axes["battery_inset"] = inset_ax
@@ -1204,7 +1205,7 @@ def plot_tech_scenario_jet_fuel(
                     label=label,
                 )
 
-        axes["kerosene"].legend(loc="lower left", framealpha=0.5)
+        axes["biofuel"].legend(loc="upper left", framealpha=0.5)
         # Add fill_between for lower to upper technology range
         if len(output_list) >= 3:
             lower_output = output_list[0]

@@ -30,6 +30,7 @@ VARIANTS_Dropin = {
     "Drop-in low-demand": {"drop_in_only": True, "low_demand_formulation": True},
 }
 TECHNOLOGIES = [1]  
+
 TECH_NAMES = ["Lower", "Mid", "Upper"]  # only the technology that was run
 
 TIMELINES = {"paper": ("", "2025-2075")}  # timeline: (file suffix, period)
@@ -76,10 +77,10 @@ for timeline, (suffix, period) in TIMELINES.items():
                 }
                 plot_fleet_mix_variants(
                     variant_outputs, fleet,
-                    title=f"Fleet Mix - {world} - {family} - {technology} ({period})",
+                    title=f"Fleet Mix - {world} - {family} - {technology} Tech ({period})",
                     save_fig=True,
                     directory_filename=str(
-                        FIG_DIR / f"fleet_mix_{world}_{family.lower()}_{technology.lower()}{suffix}.png"
+                        FIG_DIR / f"fleet_mix_{world}_{family.lower()}_{technology.lower()}_tech{suffix}.png"
                     ),
                 )
 
@@ -91,9 +92,10 @@ for timeline, (suffix, period) in TIMELINES.items():
                 }
                 plot_fleet_mix_variants(
                     world_outputs, fleet,
-                    title=f"Fleet Mix - {variant} - {technology} ({period})",
+                    title=f"Fleet Mix - {variant} - {technology} Tech ({period})",
                     save_fig=True,
                     directory_filename=str(
-                        FIG_DIR / f"fleet_mix_{variant.replace(' ', '_').lower()}_{technology.lower()}{suffix}.png"
+                        FIG_DIR / f"fleet_mix_{variant.replace(' ', '_').lower()}_{technology.lower()}_tech{suffix}.png"
                     ),
                 )
+# %%
