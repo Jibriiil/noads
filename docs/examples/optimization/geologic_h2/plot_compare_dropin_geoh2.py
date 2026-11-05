@@ -1,4 +1,6 @@
 #%%
+
+# Compare the trends of the drop-in fuel scenarios with and without geologic hydrogen, using the GCAM results.
 import os
 from pathlib import Path
 

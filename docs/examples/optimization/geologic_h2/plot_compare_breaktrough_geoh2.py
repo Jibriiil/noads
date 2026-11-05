@@ -1,4 +1,5 @@
 #%%
+#Compare the trends of the breakthrough scenarios with and without geologic hydrogen, using the GCAM results.
 import os
 from pathlib import Path
 
